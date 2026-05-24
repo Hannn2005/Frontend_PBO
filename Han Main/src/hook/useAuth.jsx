@@ -1,41 +1,33 @@
-import axios from "axios";
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useState, useEffect } from 'react';
 
+const AuthContext = createContext(null);
 
-export const UseAuthContext = createContext()
+export function AuthProvider({ children }) {
+  const [user, setUser] = useState(() => {
+    const savedUser = localStorage.getItem('user');
+    return savedUser ? JSON.parse(savedUser) : null;
+  });
 
+  useEffect(() => {
+    if (user) {
+      localStorage.setItem('user', JSON.stringify(user));
+    } else {
+      localStorage.removeItem('user');
+    }
+  }, [user]);
 
-function AuthContext ({children}){
-
-    const [user,setUser] = useState(null)
-
-    useEffect(()=>{
-        async function getUserInfo() {
-            try {
-                const res = await axios.get(`${import.meta.env.VITE_API_URL}/user/dashboard`,{withCredentials:true})
-                
-                if(!res){return console.log("user not login yet")}
-                
-                console.log(res.data)
-                setUser(res.data)
-            } catch (error) {
-                console.log(error)
-            }
-        }
-
-        getUserInfo()
-
-    },[])
-
-
-   return(
-        <UseAuthContext.Provider value={{user,setUser}}>
-            {children}
-        </UseAuthContext.Provider>
-   ) 
+  return (
+    <AuthContext.Provider value={{ user, setUser }}>
+      {children}
+    </AuthContext.Provider>
+  );
 }
 
-export default AuthContext
-
-export const useAuth = ()=> useContext(UseAuthContext)
-
+// eslint-disable-next-line react-refresh/only-export-components
+export function useAuth() {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error("useAuth harus digunakan di dalam AuthProvider");
+  }
+  return context;
+}

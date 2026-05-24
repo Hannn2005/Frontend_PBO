@@ -1,38 +1,74 @@
-import { Link } from "react-router-dom"
-import { useAuth } from "../hook/useAuth.jsx"
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../hook/useAuth';
+import axios from 'axios';
 
-function Navbar() {
+const Navbar = () => {
+  const { user, setUser } = useAuth();
+  const navigate = useNavigate();
 
-    const { user } = useAuth()
+  const handleLogout = async () => {
+    try {
+      await axios.post('http://localhost:8080/user/logout', {}, { withCredentials: true });
+      setUser(null);
+      navigate('/');
+    } catch (error) {
+      console.error(error);
+      setUser(null);
+      navigate('/');
+    }
+  };
 
-    console.log(user)
-    return (
-        <div className="flex justify-between py-5 px-10">
-            <div>
-                <div>
-                    RogerGym
-                </div>
+  return (
+    <nav className="bg-red-700 border-b border-red-800 px-8 py-4 sticky top-0 z-50 shadow-lg font-sans">
+      <div className="max-w-6xl mx-auto flex justify-between items-center">
+        <Link to="/" className="text-2xl font-black tracking-widest text-white">
+          ROGER<span className="text-black">GYM</span>
+        </Link>
+
+        <div className="flex space-x-8 items-center">
+          <Link to="/" className="text-white hover:text-black transition duration-300 text-sm font-bold uppercase tracking-wide">
+            Home
+          </Link>
+
+          {user && (
+            <Link to="/class" className="text-white hover:text-black transition duration-300 text-sm font-bold uppercase tracking-wide">
+              Jadwal
+            </Link>
+          )}
+
+          {user ? (
+            <div className="flex space-x-6 items-center">
+              {user.role === 'CUSTOMER' && (
+                <Link to="/dashboard" className="text-white hover:text-black transition duration-300 text-sm font-bold uppercase tracking-wide">
+                  Dashboard
+                </Link>
+              )}
+              {user.role === 'ADMIN' && (
+                <Link to="/admin" className="text-white hover:text-black transition duration-300 text-sm font-bold uppercase tracking-wide">
+                  Admin Panel
+                </Link>
+              )}
+              {user.role === 'TRAINER' && (
+                <Link to="/trainer" className="text-white hover:text-black transition duration-300 text-sm font-bold uppercase tracking-wide">
+                  Trainer Panel
+                </Link>
+              )}
+              <button 
+                onClick={handleLogout} 
+                className="text-black hover:text-zinc-300 transition duration-300 text-sm font-black uppercase tracking-wide"
+              >
+                Logout
+              </button>
             </div>
-
-            <div>
-                <ul className="flex gap-5">
-                    <Link to="/">Home</Link>
-                    <Link to="/class">Class</Link>
-
-                    {
-                        !user && <>
-                            <Link to="/login">Login</Link>
-                            <Link to="/signup">Signup</Link>
-                        </>
-                    }
-                    {
-                        user && <Link to="/dashboard">Dashboard</Link>
-                    }
-
-                </ul>
-            </div>
+          ) : (
+            <Link to="/login" className="bg-black text-white px-5 py-2 rounded font-bold text-sm uppercase tracking-wider hover:bg-zinc-800 transition duration-300 shadow-md">
+              Login
+            </Link>
+          )}
         </div>
-    )
-}
+      </div>
+    </nav>
+  );
+};
 
-export default Navbar
+export default Navbar;

@@ -1,65 +1,39 @@
-import axios from "axios"
-import { useEffect, useState } from "react"
-import { Routes, Route } from "react-router-dom"
-import Login from "./page/Login.jsx"
-import Signup from "./page/Signup.jsx"
-import Home from "./page/Home.jsx"
-import Navbar from "./component/Navbar.jsx"
-import AdminDashboard from "./page/Admin/AdminDashboard.jsx"
-import TrainerDashboard from "./page/Trainer/TrainerDashboard.jsx"
-import AdminProtectedRoute from "./protected/AdminProtectedRoute.jsx"
-import TrainerProtectedRoute from "./protected/TrainerProtectedRoute.jsx"
-import CustomerDashboard from "./page/Customer/CustomerDashboard.jsx"
-
-function Layout({ children }) {
-  return (
-    <>
-      <Navbar />
-      {children}
-    </>
-  )
-}
-
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { AuthProvider } from './hook/useAuth';
+import Navbar from './component/Navbar';
+import Footer from './component/Footer';
+import Home from './page/Home';
+import Login from './page/Login';
+import Signup from './page/Signup';
+import ScheduleList from './component/ScheduleList';
+import CustomerDashboard from './page/Customer/CustomerDashboard';
+import AdminDashboard from './page/Admin/AdminDashboard';
+import TrainerDashboard from './page/Trainer/TrainerDashboard';
+import AdminProtectedRoute from './protected/AdminProtectedRoute';
+import TrainerProtectedRoute from './protected/TrainerProtectedRoute';
 
 function App() {
   return (
-
-    <Routes>
-
-      <Route path="/" element={<Layout><Home /></Layout>} />
-
-      <Route path="/login" element={<Login />} />
-      <Route path="/signup" element={<Signup />} />
-
-
-      {/* Customer pages */}
-      <Route path="/dashboard" element={
-        <Layout>
-          <CustomerDashboard />
-        </Layout>
-      }></Route>
-
-
-      {/* Admin pages */}
-      <Route path="/admin" element=
-        {
-          <AdminProtectedRoute>
-            <AdminDashboard />
-          </AdminProtectedRoute>
-        } />
-
-
-      {/* Trainer Pages */}
-      <Route path="/trainer" element=
-        {
-          <TrainerProtectedRoute>
-            <TrainerDashboard />
-          </TrainerProtectedRoute>
-        } />
-
-
-    </Routes>
-  )
+    <AuthProvider>
+      <Router>
+        <div className="flex flex-col min-h-screen">
+          <Navbar />
+          <div className="flex-grow">
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/signup" element={<Signup />} />
+              <Route path="/class" element={<ScheduleList />} />
+              <Route path="/dashboard" element={<CustomerDashboard />} />
+              <Route path="/admin" element={<AdminProtectedRoute><AdminDashboard /></AdminProtectedRoute>} />
+              <Route path="/trainer" element={<TrainerProtectedRoute><TrainerDashboard /></TrainerProtectedRoute>} />
+            </Routes>
+          </div>
+          <Footer />
+        </div>
+      </Router>
+    </AuthProvider>
+  );
 }
 
-export default App
+export default App;
