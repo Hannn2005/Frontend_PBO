@@ -30,7 +30,12 @@ const Login = () => {
         navigate('/dashboard');
       }
     } catch (err) {
-      setError(err.response?.data || 'Login gagal, periksa email dan password');
+      const errorData = err.response?.data;
+      const errorMessage = typeof errorData === 'string' 
+        ? errorData 
+        : errorData?.message || 'Login gagal, periksa email dan password';
+
+      setError(errorMessage);
     }
   };
 

@@ -21,21 +21,27 @@ const Navbar = () => {
   return (
     <nav className="bg-red-700 border-b border-red-800 px-8 py-4 sticky top-0 z-50 shadow-lg font-sans">
       <div className="max-w-6xl mx-auto flex justify-between items-center">
-        <Link to="/" className="text-2xl font-black tracking-widest text-white">
+        
+        {/* Logo */}
+        <Link to="/" className="text-2xl font-black tracking-widest text-white hover:scale-105 transition-transform duration-300">
           ROGER<span className="text-black">GYM</span>
         </Link>
 
         <div className="flex space-x-8 items-center">
-          <Link to="/" className="text-white hover:text-black transition duration-300 text-sm font-bold uppercase tracking-wide">
-            Home
-          </Link>
+          
+          {!user && (
+            <Link to="/" className="text-white hover:text-black transition duration-300 text-sm font-bold uppercase tracking-wide">
+              Home
+            </Link>
+          )}
 
-          {user && (
+          {user?.role === 'CUSTOMER' && (
             <Link to="/class" className="text-white hover:text-black transition duration-300 text-sm font-bold uppercase tracking-wide">
               Jadwal
             </Link>
           )}
 
+          {/* MENU KHUSUS ROLE YANG LOGIN */}
           {user ? (
             <div className="flex space-x-6 items-center">
               {user.role === 'CUSTOMER' && (
@@ -43,28 +49,32 @@ const Navbar = () => {
                   Dashboard
                 </Link>
               )}
+
               {user.role === 'ADMIN' && (
                 <Link to="/admin" className="text-white hover:text-black transition duration-300 text-sm font-bold uppercase tracking-wide">
-                  Admin Panel
+                  Admin Dashboard
                 </Link>
               )}
+              
               {user.role === 'TRAINER' && (
                 <Link to="/trainer" className="text-white hover:text-black transition duration-300 text-sm font-bold uppercase tracking-wide">
-                  Trainer Panel
+                  Trainer Dashboard
                 </Link>
               )}
+              
               <button 
                 onClick={handleLogout} 
-                className="text-black hover:text-zinc-300 transition duration-300 text-sm font-black uppercase tracking-wide"
+                className="ml-2 px-4 py-2 border-2 border-white/70 text-white rounded-md font-bold text-sm uppercase tracking-wider hover:bg-white hover:text-red-700 hover:border-white transition-all duration-300 shadow-sm"
               >
                 Logout
               </button>
             </div>
           ) : (
-            <Link to="/login" className="bg-black text-white px-5 py-2 rounded font-bold text-sm uppercase tracking-wider hover:bg-zinc-800 transition duration-300 shadow-md">
+            <Link to="/login" className="ml-2 px-4 py-2 border-2 border-white/70 text-white rounded-md font-bold text-sm uppercase tracking-wider hover:bg-white hover:text-red-700 hover:border-white transition-all duration-300 shadow-sm">
               Login
             </Link>
           )}
+          
         </div>
       </div>
     </nav>

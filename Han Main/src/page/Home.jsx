@@ -15,10 +15,8 @@ const Home = () => {
         </p>
         
         <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-6">
-          <Link to="/class" className="bg-red-600 text-white font-bold px-8 py-4 rounded-lg hover:bg-red-700 transition duration-300 text-lg shadow-lg shadow-red-600/20 tracking-wide uppercase text-sm">
-            Jelajahi Kelas
-          </Link>
-          <Link to="/signup" className="bg-transparent border border-zinc-700 text-white font-bold px-8 py-4 rounded-lg hover:border-red-600 hover:text-red-500 transition duration-300 text-lg tracking-wide uppercase text-sm">
+          
+          <Link to="/signup" className="bg-red-600 text-white font-bold px-8 py-4 rounded-lg hover:bg-red-700 transition duration-300 text-lg shadow-lg shadow-red-600/20 tracking-wide uppercase text-sm">
             Bergabung Sekarang
           </Link>
         </div>
