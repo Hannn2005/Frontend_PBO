@@ -7,28 +7,58 @@ const ScheduleList = () => {
   const [errorMessage, setErrorMessage] = useState('');
   const { user } = useAuth();
 
+  // State baru untuk mengatur notifikasi kustom
+  const [notification, setNotification] = useState({ show: false, message: '', type: '' });
+
   useEffect(() => {
     axios.get('http://localhost:8080/api/classes', { withCredentials: true })
       .then(res => setSchedules(res.data))
-      .catch(err => setErrorMessage(err.response?.data || err.message));
+      .catch(err => setErrorMessage(err.response?.data?.message || err.message));
   }, []);
+  
+  const triggerNotification = (message, type = 'success') => {
+    setNotification({ show: true, message, type });
+    setTimeout(() => {
+      setNotification({ show: false, message: '', type: '' });
+    }, 3500);
+  };
 
   const handleBooking = async (classId) => {
     if (!user) {
-      alert('Silakan login terlebih dahulu untuk booking kelas!');
+      triggerNotification('Silakan login terlebih dahulu untuk booking kelas!', 'error');
       return;
     }
     
     try {
-      await axios.post(`http://localhost:8080/api/bookings/${classId}`, {}, { withCredentials: true });
-      alert('Booking berhasil! Cek jadwal di Dashboard kamu.');
+      const response = await axios.post(`http://localhost:8080/api/bookings/${classId}`, {}, { withCredentials: true });
+      // Mengambil pesan sukses dari JSON backend
+      triggerNotification(response.data.message || 'Booking berhasil! Cek jadwal di Dashboard kamu.', 'success');
     } catch (error) {
-      alert(error.response?.data || 'Gagal membooking kelas.');
+      const backendError = error.response?.data?.message || 'Gagal membooking kelas.';
+      triggerNotification(backendError, 'error');
     }
   };
 
   return (
-    <div className="bg-black min-h-screen p-8 font-sans">
+    <div className="bg-black min-h-screen p-8 font-sans relative">
+      {notification.show && (
+        <div className={`fixed top-24 right-8 z-50 flex items-center p-4 rounded-lg shadow-2xl border transition-all duration-500 animate-bounce max-w-sm ${
+          notification.type === 'success' 
+            ? 'bg-zinc-900 border-green-500 text-green-400' 
+            : 'bg-zinc-900 border-red-600 text-red-500'
+        }`}>
+          <div className="mr-3">
+            {notification.type === 'success' ? (
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" /></svg>
+            ) : (
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+            )}
+          </div>
+          <p className="text-sm font-bold tracking-wide uppercase">{notification.message}</p>
+        </div>
+      )}
+      {/* ============================================================= */}
+
       <h2 className="text-3xl font-bold text-white mb-8 text-center uppercase tracking-wider">
         Jadwal <span className="text-red-600">Latihan</span>
       </h2>

@@ -9,7 +9,7 @@ const Footer = () => {
             ROGER<span className="text-red-600">GYM</span>
           </Link>
           <p className="text-zinc-400 text-sm leading-relaxed pr-4">
-            Pusat kebugaran nomor satu dengan fasilitas paling modern. Bergabunglah dengan komunitas kami dan wujudkan bentuk tubuh impianmu tanpa alasan.
+            Pusat kebugaran nomor satu dengan fasilitas paling modern. Bergabunglah dengan komunitas kami, mari latih kemampuanmu dan wujudkan bentuk tubuh impianmu.
           </p>
         </div>
         
