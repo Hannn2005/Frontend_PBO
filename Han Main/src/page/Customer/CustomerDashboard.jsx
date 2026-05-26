@@ -18,7 +18,7 @@ const CustomerDashboard = () => {
         <h2 className="text-3xl font-bold text-white mb-2 uppercase tracking-wider">
           Halo, <span className="text-red-600">{user?.username || 'Member'}</span>
         </h2>
-        <p className="text-zinc-400 mb-8">Ini adalah daftar kelas yang sudah kamu booking.</p>
+        <p className="text-zinc-400 mb-8">Ini adalah daftar kelas yang sudah kamu ambil, kamu harus menunggu persetujuan dari admin untuk bisa masuk ke kelas.</p>
 
         {myClasses.length === 0 ? (
           <div className="bg-zinc-900 p-8 rounded-xl border border-zinc-800 text-center shadow-lg">
@@ -32,9 +32,18 @@ const CustomerDashboard = () => {
                   <h3 className="text-xl font-bold text-white">{item.serviceName}</h3>
                   <p className="text-zinc-400 text-sm mt-1">{item.dayOfWeek}, {item.startTime} - {item.endTime}</p>
                 </div>
-                <span className="bg-red-500/10 border border-red-500/50 text-red-500 px-4 py-2 rounded-full text-sm font-bold tracking-widest uppercase">
-                  Booked
-                </span>
+                
+                {item.status === 'APPROVED' ? (
+                  <span className="bg-emerald-500/10 border border-emerald-500/50 text-emerald-400 px-4 py-2 rounded-full text-xs font-bold tracking-widest uppercase">
+                    ● APPROVED
+                  </span>
+                ) : (
+                  <span className="bg-amber-500/10 border border-amber-500/50 text-amber-500 px-4 py-2 rounded-full text-xs font-bold tracking-widest uppercase animate-pulse">
+                    ○ PENDING
+                  </span>
+                )}
+                {/* ===================================================================== */}
+
               </div>
             ))}
           </div>
