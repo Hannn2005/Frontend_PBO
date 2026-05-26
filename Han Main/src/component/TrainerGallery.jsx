@@ -24,10 +24,10 @@ const TrainerGallery = () => {
     <div className="bg-zinc-950 py-24 font-sans border-y border-zinc-900">
       <div className="max-w-6xl mx-auto px-4 text-center">
         <h2 className="text-3xl font-bold text-white mb-4 tracking-wider">
-          PELATIH <span className="text-red-600">PROFESIONAL</span>
+          KELAS & PELATIH <span className="text-red-600">PROFESIONAL</span>
         </h2>
         <p className="text-zinc-400 max-w-2xl mx-auto mb-16 text-sm">
-          Dibimbing langsung oleh para ahli yang telah tersertifikasi internasional. Kami memastikan setiap tetes keringatmu membuahkan hasil yang maksimal.
+          Kelas yang hebat untuk pengembangan diri serta Dibimbing langsung oleh para ahli yang telah tersertifikasi internasional. Kami memastikan setiap tetes keringatmu membuahkan hasil yang maksimal.
         </p>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
