@@ -41,7 +41,6 @@ const Navbar = () => {
             </Link>
           )}
 
-          {/* MENU KHUSUS ROLE YANG LOGIN */}
           {user ? (
             <div className="flex space-x-6 items-center">
               {user.role === 'CUSTOMER' && (
@@ -52,13 +51,13 @@ const Navbar = () => {
 
               {user.role === 'ADMIN' && (
                 <Link to="/admin" className="text-white hover:text-black transition duration-300 text-sm font-bold uppercase tracking-wide">
-                  Admin Dashboard
+                  Dashboard
                 </Link>
               )}
               
               {user.role === 'TRAINER' && (
                 <Link to="/trainer" className="text-white hover:text-black transition duration-300 text-sm font-bold uppercase tracking-wide">
-                  Trainer Dashboard
+                  Dashboard
                 </Link>
               )}
               
