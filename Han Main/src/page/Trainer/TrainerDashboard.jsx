@@ -1,109 +1,114 @@
+import { useState, useEffect } from 'react';
+import axios from 'axios';
 import { useAuth } from '../../hook/useAuth';
 
 const TrainerDashboard = () => {
-  const { user } = useAuth();
-  const currentTrainerName = user?.username || '';
+  const [mySchedules, setMySchedules] = useState([]);
+  const [myMembers, setMyMembers] = useState([]);
+  const { user } = useAuth(); 
+  const token = user?.token || user?.accessToken || '';
 
-  const dummyClasses = [
-    {
-      serviceName: 'Powerlifting Heavy Session',
-      dayOfWeek: 'Senin',
-      startTime: '10:00',
-      endTime: '12:00',
-      trainerName: 'Bima Perkasa',
-      bookedCount: 3,
-      participants: [
-        { username: 'Marcello Frans' },
-        { username: 'Alex Situmorang' },
-        { username: 'Rian Sitorus' }
-      ]
-    },
-    {
-      serviceName: 'Yoga & Flexibility',
-      dayOfWeek: 'Rabu',
-      startTime: '16:00',
-      endTime: '17:30',
-      trainerName: 'Sarah Wijaya',
-      bookedCount: 2,
-      participants: [
-        { username: 'Angelina' },
-        { username: 'Budi Santoso' }
-      ]
-    },
-    {
-      serviceName: 'Hypertrophy Bodybuilding',
-      dayOfWeek: 'Jumat',
-      startTime: '19:00',
-      endTime: '21:00',
-      trainerName: 'Darius Sinathrya',
-      bookedCount: 4,
-      participants: [
-        { username: 'Marcello Frans' },
-        { username: 'Kevin Wijaya' },
-        { username: 'Dimas Pratama' },
-        { username: 'Rizky Fadillah' }
-      ]
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const config = {
+          headers: { 'Authorization': `Bearer ${token}` },
+          withCredentials: true
+        };
+        const resClasses = await axios.get('http://localhost:8080/api/classes', config);
+        const filteredSchedules = resClasses.data.filter(item => item.trainerName === user?.username);
+        setMySchedules(filteredSchedules);
+        const resMembers = await axios.get('http://localhost:8080/api/trainer/bookings', config);
+        setMyMembers(resMembers.data);
+
+      } catch (error) {
+        console.error("Gagal mengambil data server:", error);
+      }
+    };
+
+    if (user?.username) {
+      fetchData();
     }
-  ];
-
-  const filtered = dummyClasses.filter(
-    c => c.trainerName.toLowerCase() === currentTrainerName.toLowerCase()
-  );
-
-  const trainerClasses = filtered.length > 0 ? filtered : [
-    {
-      serviceName: 'Kelas Kustom Trainer',
-      dayOfWeek: 'Selasa',
-      startTime: '14:00',
-      endTime: '16:00',
-      trainerName: currentTrainerName || 'Pelatih',
-      bookedCount: 2,
-      participants: [
-        { username: 'Marcello Frans' },
-        { username: 'Aditya Perkasa' }
-      ]
-    }
-  ];
+  }, [user, token]); 
+  const getMembersForClass = (classId) => {
+    return myMembers.filter(member => member.classId === classId);
+  };
 
   return (
     <div className="bg-black min-h-screen p-8 font-sans">
       <div className="max-w-6xl mx-auto">
+        
         <h2 className="text-3xl font-bold text-white mb-2 uppercase tracking-wider">
-          Trainer <span className="text-red-600">Dashboard</span>
+          Jadwal <span className="text-red-600">Pelatih</span>
         </h2>
-        <p className="text-zinc-400 mb-8">Selamat datang, {user?.username || 'Pelatih'}. Berikut jadwal mengajar dan daftar peserta Anda.</p>
+        <p className="text-zinc-400 mb-8">
+          Selamat datang, <span className="text-white font-bold">{user?.username || 'Coach'}</span>! Berikut adalah jadwal kelas dan daftar peserta yang harus kamu pimpin.
+        </p>
 
-        <div className="grid grid-cols-1 gap-8">
-          {trainerClasses.map((item, index) => (
-            <div key={index} className="bg-zinc-900 p-6 rounded-xl border border-zinc-800 shadow-lg">
-              <div className="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-zinc-800 pb-4 mb-4">
-                <div>
-                  <h3 className="text-2xl font-bold text-white">{item.serviceName}</h3>
-                  <p className="text-zinc-400 text-sm mt-1">{item.dayOfWeek}, {item.startTime} - {item.endTime}</p>
-                </div>
-                <div className="mt-2 md:mt-0 bg-black px-4 py-2 rounded border border-zinc-800">
-                  <p className="text-red-600 text-xs font-bold uppercase tracking-widest text-center">Total Peserta</p>
-                  <p className="text-white text-xl font-black text-center">{item.bookedCount || 0}</p>
-                </div>
-              </div>
+        {mySchedules.length === 0 ? (
+          <div className="bg-zinc-900 p-8 rounded-xl border border-zinc-800 text-center shadow-lg">
+            <p className="text-zinc-400">Saat ini kamu belum memiliki jadwal kelas untuk diajar.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {mySchedules.map((item) => {
+              const classMembers = getMembersForClass(item.id);
 
-              <div>
-                <h4 className="text-sm font-bold text-red-600 tracking-wider mb-3 uppercase">Daftar Nama Peserta:</h4>
-                {item.participants && item.participants.length > 0 ? (
-                  <ul className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-                    {item.participants.map((p, idx) => (
-                      <li key={idx} className="bg-black p-3 rounded border border-zinc-800 text-zinc-300 text-sm font-medium">
-                        👤 {p.username}
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="text-zinc-500 text-sm italic">Belum ada peserta yang disetujui masuk kelas ini.</p>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
+              return (
+                <div key={item.id} className="bg-zinc-900 p-6 rounded-xl border border-red-600/30 flex flex-col justify-between shadow-lg hover:border-red-500 transition-colors">
+                  
+                  <div className="mb-4">
+                    <h3 className="text-xl font-bold text-white mb-1">{item.serviceName}</h3>
+                    <div className="w-10 h-1 bg-red-600 mb-4 rounded-full"></div>
+                    
+                    <div className="space-y-2 text-sm mb-6 pb-6 border-b border-zinc-800">
+                      <p className="text-zinc-400">
+                        Hari: <span className="text-white font-medium ml-2">{item.dayOfWeek}</span>
+                      </p>
+                      <p className="text-zinc-400">
+                        Waktu: <span className="text-white font-medium ml-2">{item.startTime} - {item.endTime}</span>
+                      </p>
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-bold text-red-600 mb-3 tracking-wider flex justify-between">
+                        DAFTAR PESERTA 
+                        <span className="bg-red-600/20 text-red-500 px-2 py-0.5 rounded-full text-xs">
+                          {classMembers.length} Orang
+                        </span>
+                      </h4>
+                      
+                      {classMembers.length > 0 ? (
+                        <ul className="space-y-2 max-h-32 overflow-y-auto pr-2 custom-scrollbar">
+                          {classMembers.map((member, idx) => (
+                            <li key={idx} className="bg-black/50 p-2 rounded border border-zinc-800 flex justify-between items-center text-sm">
+                              <span className="text-zinc-300 font-medium">👤 {member.memberName}</span>
+                              <span className="text-emerald-500 text-xs font-bold bg-emerald-500/10 px-2 py-1 rounded">
+                                {member.status}
+                              </span>
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <div className="bg-black/30 p-3 rounded border border-zinc-800/50 text-center">
+                          <p className="text-zinc-500 text-sm italic">Belum ada peserta di kelas ini.</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="mt-4 pt-4 border-t border-zinc-800 flex justify-between items-center">
+                    <span className="text-xs text-zinc-500 uppercase tracking-wider">Status:</span>
+                    <span className="bg-red-500/10 text-red-500 px-3 py-1 rounded text-xs font-bold tracking-widest uppercase border border-red-500/30">
+                      KELAS ANDA
+                    </span>
+                  </div>
+
+                </div>
+              );
+            })}
+          </div>
+        )}
+        
       </div>
     </div>
   );

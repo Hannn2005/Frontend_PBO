@@ -6,27 +6,27 @@ const CustomerDashboard = () => {
   const [myClasses, setMyClasses] = useState([]);
   const { user } = useAuth();
 
-  const fetchBookings = async () => {
-    try {
-      const res = await axios.get('http://localhost:8080/user/dashboard', { withCredentials: true });
-      setMyClasses(res.data.bookedClasses || []);
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
   useEffect(() => {
-    fetchBookings();
+    axios.get('http://localhost:8080/user/dashboard', { withCredentials: true })
+      .then(res => setMyClasses(res.data.bookedClasses || []))
+      .catch(err => console.error(err));
   }, []);
 
-  const deleteBooking = async (bookingId) => {
-    if (!window.confirm("Hapus riwayat kelas yang ditolak ini?")) return;
+  const handleCancelBooking = async (bookingId) => {
+    const isConfirmed = window.confirm("Apakah kamu yakin ingin membatalkan booking kelas ini?");
+    if (!isConfirmed) return;
+
     try {
-      await axios.delete(`http://localhost:8080/api/bookings/delete/${bookingId}`, { withCredentials: true });
-      fetchBookings(); // Refresh data
-    } catch (err) {
-      console.error(err);
-      alert("Gagal menghapus.");
+      const response = await axios.delete(`http://localhost:8080/api/bookings/${bookingId}`, { 
+        withCredentials: true 
+      });
+      
+      alert(response.data.message || "Booking berhasil dibatalkan!");
+      
+      setMyClasses(prevClasses => prevClasses.filter(item => item.id !== bookingId));
+      
+    } catch (error) {
+      alert(error.response?.data?.message || "Gagal membatalkan booking.");
     }
   };
 
@@ -36,7 +36,7 @@ const CustomerDashboard = () => {
         <h2 className="text-3xl font-bold text-white mb-2 uppercase tracking-wider">
           Halo, <span className="text-red-600">{user?.username || 'Member'}</span>
         </h2>
-        <p className="text-zinc-400 mb-8">Ini adalah daftar kelas yang sudah kamu booking.</p>
+        <p className="text-zinc-400 mb-8">Ini adalah daftar kelas yang sudah kamu ambil, kamu harus menunggu persetujuan dari admin untuk bisa masuk ke kelas.</p>
 
         {myClasses.length === 0 ? (
           <div className="bg-zinc-900 p-8 rounded-xl border border-zinc-800 text-center shadow-lg">
@@ -44,31 +44,32 @@ const CustomerDashboard = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {myClasses.map((item) => (
-              <div key={item.id} className="relative bg-zinc-900 p-6 rounded-xl border border-zinc-800 flex justify-between items-center shadow-lg hover:border-zinc-700 transition">
-                
-                {item.status === 'REJECTED' && (
-                  <button 
-                    onClick={() => deleteBooking(item.id)}
-                    className="absolute top-2 right-2 text-zinc-500 hover:text-red-600 font-bold px-2"
-                  >
-                    X
-                  </button>
-                )}
-
+            {myClasses.map((item, index) => (
+              <div key={item.id || index} className="bg-zinc-900 p-6 rounded-xl border border-red-600/30 flex justify-between items-center shadow-lg">
                 <div>
                   <h3 className="text-xl font-bold text-white">{item.serviceName}</h3>
                   <p className="text-zinc-400 text-sm mt-1">{item.dayOfWeek}, {item.startTime} - {item.endTime}</p>
                 </div>
+                <div className="flex flex-col items-end gap-3">
+                  
+                  {item.status === 'APPROVED' ? (
+                    <span className="bg-emerald-500/10 border border-emerald-500/50 text-emerald-400 px-4 py-2 rounded-full text-xs font-bold tracking-widest uppercase">
+                      ● APPROVED
+                    </span>
+                  ) : (
+                    <span className="bg-amber-500/10 border border-amber-500/50 text-amber-500 px-4 py-2 rounded-full text-xs font-bold tracking-widest uppercase animate-pulse">
+                      ○ PENDING
+                    </span>
+                  )}
 
+                  <button 
+                    onClick={() => handleCancelBooking(item.id)}
+                    className="text-xs font-bold text-zinc-500 hover:text-red-500 transition-colors uppercase tracking-wider underline underline-offset-4 decoration-zinc-700 hover:decoration-red-500"
+                  >
+                    Batalkan
+                  </button>
 
-                <span className={`px-4 py-2 rounded-full text-sm font-bold tracking-widest uppercase border ${
-                  item.status === 'PENDING' ? 'bg-yellow-500/10 border-yellow-500/50 text-yellow-500' :
-                  item.status === 'APPROVED' ? 'bg-green-500/10 border-green-500/50 text-green-400' :
-                  'bg-red-500/10 border-red-500/50 text-red-500'
-                }`}>
-                  {item.status}
-                </span>
+                </div>
               </div>
             ))}
           </div>

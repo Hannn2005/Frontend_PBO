@@ -4,6 +4,10 @@ import axios from 'axios';
 const AdminDashboard = () => {
   const [classes, setClasses] = useState([]);
   const [bookings, setBookings] = useState([]);
+  const [trainers, setTrainers] = useState([]); 
+  
+  const [refreshKey, setRefreshKey] = useState(0);
+
   const [formData, setFormData] = useState({
     serviceName: '',
     dayOfWeek: '',
@@ -12,28 +16,26 @@ const AdminDashboard = () => {
     trainerName: ''
   });
 
-  const fetchClasses = async () => {
-    try {
-      const res = await axios.get('http://localhost:8080/api/classes', { withCredentials: true });
-      setClasses(res.data);
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
-  const fetchBookings = async () => {
-    try {
-      const res = await axios.get('http://localhost:8080/api/admin/bookings', { withCredentials: true });
-      setBookings(res.data);
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
   useEffect(() => {
-    fetchClasses();
-    fetchBookings();
-  }, []);
+    const fetchAllData = async () => {
+      try {
+        const resClasses = await axios.get('http://localhost:8080/api/classes', { withCredentials: true });
+        setClasses(resClasses.data);
+
+        const resBookings = await axios.get('http://localhost:8080/api/admin/bookings', { withCredentials: true });
+        setBookings(resBookings.data);
+
+        const resUsers = await axios.get('http://localhost:8080/api/admin', { withCredentials: true });
+        const trainerList = resUsers.data.filter(user => user.role === 'TRAINER');
+        setTrainers(trainerList);
+
+      } catch (error) {
+        console.error("Gagal mengambil data dari server:", error);
+      }
+    };
+
+    fetchAllData();
+  }, [refreshKey]); 
 
   const handleInputChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -42,42 +44,40 @@ const AdminDashboard = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const payload = {
-        ...formData,
-        startTime: `${formData.startTime}:00`,
-        endTime: `${formData.endTime}:00`
-      };
-
-      await axios.post('http://localhost:8080/api/classes', payload, { withCredentials: true });
-      alert("Kelas berhasil ditambahkan!");
-      fetchClasses(); 
-      setFormData({ serviceName: '', dayOfWeek: '', startTime: '', endTime: '', trainerName: '' }); 
+      const res = await axios.post('http://localhost:8080/api/admin/classes', formData, { withCredentials: true });
+      alert(res.data?.message || "Kelas berhasil ditambahkan!");
+      setFormData({ serviceName: '', dayOfWeek: '', startTime: '', endTime: '', trainerName: '' });
+      setRefreshKey(oldKey => oldKey + 1); 
     } catch (error) {
       console.error(error);
-      alert("Gagal menambahkan kelas.");
+      alert(error.response?.data?.message || "Gagal menambahkan kelas");
     }
   };
 
   const handleDelete = async (id) => {
-    const confirmDelete = window.confirm("Yakin ingin menghapus kelas ini?");
-    if (!confirmDelete) return;
+    const isConfirmed = window.confirm("Yakin ingin menghapus kelas ini? Semua riwayat booking terkait juga akan terhapus.");
+    if (!isConfirmed) return;
 
     try {
-      await axios.delete(`http://localhost:8080/api/classes/${id}`, { withCredentials: true });
-      alert("Kelas berhasil dihapus!");
-      fetchClasses();
+      const res = await axios.delete(`http://localhost:8080/api/admin/classes/${id}`, { withCredentials: true });
+      alert(res.data?.message || "Kelas berhasil dihapus!");
+      
+      setRefreshKey(oldKey => oldKey + 1);
     } catch (error) {
       console.error(error);
-      alert("Gagal menghapus kelas.");
+      alert(error.response?.data?.message || "Gagal menghapus kelas");
     }
   };
 
   const handleUpdateStatus = async (bookingId, status) => {
     try {
       await axios.put(`http://localhost:8080/api/admin/bookings/${bookingId}`, { status }, { withCredentials: true });
-      fetchBookings();
+      alert(`Booking berhasil di-${status.toLowerCase()}!`); 
+      
+      setRefreshKey(oldKey => oldKey + 1);
     } catch (error) {
       console.error(error);
+      alert(error.response?.data?.message || "Gagal mengubah status booking");
     }
   };
 
@@ -102,82 +102,76 @@ const AdminDashboard = () => {
                 </tr>
               </thead>
               <tbody>
-                {bookings.length === 0 ? (
-                  <tr>
-                    <td colSpan="5" className="p-8 text-center text-zinc-500 italic">Belum ada booking peserta.</td>
+                {bookings.map((b) => (
+                  <tr key={b.id} className="border-b border-zinc-800 hover:bg-zinc-800 transition">
+                    <td className="p-4 text-white font-medium">{b.username}</td>
+                    <td className="p-4">{b.serviceName}</td>
+                    <td className="p-4">{b.dayOfWeek}, {b.startTime}</td>
+                    <td className="p-4">
+                      <span className={`px-3 py-1 rounded text-xs font-bold ${
+                        b.status === 'PENDING' ? 'bg-amber-500/10 text-amber-500 border border-amber-500/30' : 
+                        b.status === 'APPROVED' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30' : 
+                        'bg-zinc-800 text-zinc-400 border border-zinc-600'
+                      }`}>
+                        {b.status}
+                      </span>
+                    </td>
+                    <td className="p-4">
+                      {b.status === 'PENDING' ? (
+                        <div className="flex gap-2">
+                          <button onClick={() => handleUpdateStatus(b.id, 'APPROVED')} className="bg-emerald-600 text-white px-3 py-1 rounded hover:bg-emerald-700 transition font-bold text-xs">TERIMA</button>
+                          <button onClick={() => handleUpdateStatus(b.id, 'REJECTED')} className="bg-zinc-800 text-red-500 px-3 py-1 rounded border border-red-500/30 hover:bg-red-600 hover:text-white transition font-bold text-xs">TOLAK</button>
+                        </div>
+                      ) : (
+                         <span className="text-zinc-600 text-xs italic">Selesai</span>
+                      )}
+                    </td>
                   </tr>
-                ) : (
-                  bookings.map((b) => (
-                    <tr key={b.id} className="border-b border-zinc-800 hover:bg-zinc-800 transition">
-                      <td className="p-4 text-white font-medium">{b.username}</td>
-                      <td className="p-4">{b.serviceName}</td>
-                      <td className="p-4">{b.dayOfWeek}, {b.startTime}</td>
-                      <td className="p-4">
-                        <span className={`px-3 py-1 rounded text-xs font-bold ${b.status === 'PENDING' ? 'bg-yellow-500/10 text-yellow-500 border border-yellow-500/30' : b.status === 'APPROVED' ? 'bg-green-500/10 text-green-400 border border-green-500/30' : 'bg-red-500/10 text-red-500 border border-red-500/30'}`}>
-                          {b.status}
-                        </span>
-                      </td>
-                      <td className="p-4">
-                        {b.status === 'PENDING' && (
-                          <div className="flex gap-2">
-                            <button onClick={() => handleUpdateStatus(b.id, 'APPROVED')} className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 transition font-bold text-xs">TERIMA</button>
-                            <button onClick={() => handleUpdateStatus(b.id, 'REJECTED')} className="bg-zinc-800 text-red-500 px-3 py-1 rounded border border-red-500/30 hover:bg-red-600 hover:text-white transition font-bold text-xs">TOLAK</button>
-                          </div>
-                        )}
-                      </td>
-                    </tr>
-                  ))
-                )}
+                ))}
               </tbody>
             </table>
           </div>
         </div>
 
-        <div className="bg-zinc-900 p-8 rounded-xl border border-zinc-800 shadow-lg mb-8">
-          <h3 className="text-xl font-bold text-red-600 mb-6 tracking-wider">TAMBAH KELAS BARU</h3>
-          
-          <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
-       
-            <div className="flex flex-col">
-              <label className="text-xs text-zinc-400 mb-2 uppercase tracking-wider font-bold">Nama Kelas</label>
-              <input type="text" name="serviceName" placeholder="Contoh: Yoga Dasar" value={formData.serviceName} onChange={handleInputChange} className="w-full bg-zinc-950 text-white border border-zinc-700 rounded-lg px-4 py-3 focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600 transition" required />
-            </div>
-
-            <div className="flex flex-col">
-              <label className="text-xs text-zinc-400 mb-2 uppercase tracking-wider font-bold">Pilih Hari</label>
-              <select name="dayOfWeek" value={formData.dayOfWeek} onChange={handleInputChange} className="w-full bg-zinc-950 text-white border border-zinc-700 rounded-lg px-4 py-3 focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600 transition appearance-none" required>
-                <option value="" disabled>Pilih Hari...</option>
-                <option value="Senin">Senin</option>
-                <option value="Selasa">Selasa</option>
-                <option value="Rabu">Rabu</option>
-                <option value="Kamis">Kamis</option>
-                <option value="Jumat">Jumat</option>
-                <option value="Sabtu">Sabtu</option>
-                <option value="Minggu">Minggu</option>
-              </select>
-            </div>
-
-            <div className="flex flex-col">
-              <label className="text-xs text-zinc-400 mb-2 uppercase tracking-wider font-bold">Jam Mulai</label>
-              <input type="time" name="startTime" value={formData.startTime} onChange={handleInputChange} className="w-full bg-zinc-950 text-white border border-zinc-700 rounded-lg px-4 py-3 focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600 transition" required />
-            </div>
-
-            <div className="flex flex-col">
-              <label className="text-xs text-zinc-400 mb-2 uppercase tracking-wider font-bold">Jam Selesai</label>
-              <input type="time" name="endTime" value={formData.endTime} onChange={handleInputChange} className="w-full bg-zinc-950 text-white border border-zinc-700 rounded-lg px-4 py-3 focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600 transition" required />
-            </div>
-
-            <div className="flex flex-col md:col-span-2">
-              <label className="text-xs text-zinc-400 mb-2 uppercase tracking-wider font-bold">Nama Pelatih</label>
-              <input type="text" name="trainerName" placeholder="Contoh: Coach Bima" value={formData.trainerName} onChange={handleInputChange} className="w-full bg-zinc-950 text-white border border-zinc-700 rounded-lg px-4 py-3 focus:outline-none focus:border-red-600 focus:ring-1 focus:ring-red-600 transition" required />
-            </div>
+        <div className="bg-zinc-900 p-6 rounded-xl border border-zinc-800 shadow-lg mb-8">
+          <h3 className="text-xl font-bold text-red-600 mb-4 tracking-wider">TAMBAH KELAS BARU</h3>
+          <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <input type="text" name="serviceName" placeholder="Nama Kelas" value={formData.serviceName} onChange={handleInputChange} className="bg-black text-white border border-zinc-700 rounded-lg px-4 py-2 focus:outline-none focus:border-red-600" required />
             
-            <button type="submit" className="md:col-span-2 w-full bg-red-600 text-white font-bold py-4 rounded-lg hover:bg-red-700 transition duration-300 tracking-widest text-sm mt-4 shadow-lg shadow-red-600/20">
-              SIMPAN KELAS
-            </button>
+            <select name="dayOfWeek" value={formData.dayOfWeek} onChange={handleInputChange} className="bg-black text-white border border-zinc-700 rounded-lg px-4 py-2 focus:outline-none focus:border-red-600" required>
+              <option value="" disabled>Pilih Hari</option>
+              <option value="Senin">Senin</option>
+              <option value="Selasa">Selasa</option>
+              <option value="Rabu">Rabu</option>
+              <option value="Kamis">Kamis</option>
+              <option value="Jumat">Jumat</option>
+              <option value="Sabtu">Sabtu</option>
+              <option value="Minggu">Minggu</option>
+            </select>
+
+            <input type="time" name="startTime" value={formData.startTime} onChange={handleInputChange} className="bg-black text-white border border-zinc-700 rounded-lg px-4 py-2 focus:outline-none focus:border-red-600" required />
+            <input type="time" name="endTime" value={formData.endTime} onChange={handleInputChange} className="bg-black text-white border border-zinc-700 rounded-lg px-4 py-2 focus:outline-none focus:border-red-600" required />
+            
+            <select 
+              name="trainerName" 
+              value={formData.trainerName} 
+              onChange={handleInputChange} 
+              className="bg-black text-white border border-zinc-700 rounded-lg px-4 py-2 focus:outline-none focus:border-red-600" 
+              required
+            >
+              <option value="" disabled>Pilih Pelatih</option>
+              {trainers.length === 0 ? (
+                <option value="" disabled>Tidak ada data pelatih</option>
+              ) : (
+                trainers.map((t, index) => (
+                  <option key={index} value={t.username}>{t.username}</option>
+                ))
+              )}
+            </select>
+
+            <button type="submit" className="bg-red-600 text-white font-bold py-2 rounded-lg hover:bg-red-700 transition tracking-widest text-sm">SIMPAN KELAS</button>
           </form>
         </div>
-
         <div className="bg-zinc-900 p-6 rounded-xl border border-zinc-800 shadow-lg">
           <h3 className="text-xl font-bold text-red-600 mb-4 tracking-wider">DAFTAR KELAS</h3>
           <div className="overflow-x-auto">
@@ -207,6 +201,7 @@ const AdminDashboard = () => {
             </table>
           </div>
         </div>
+        
       </div>
     </div>
   );
