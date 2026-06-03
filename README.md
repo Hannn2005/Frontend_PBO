@@ -9,5 +9,5 @@ https://frontend-pbo.vercel.app
 
 untuk masuk admin tinggal login menggunakan 
 Gmail: admin@rogergym
-Pass : rahasiaadmin124
+Pass : rahasiaadmin123
 
