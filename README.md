@@ -1,16 +1,20 @@
-# Identitas
+# Identitas Collaborator
 
 1. Farhan Ananda Muchti Harahap (241401062)
-   Akun = Hannn2005 / Farhan Ananda Muchti Harahap
+   
+   **Akun = Hannn2005 / Farhan Ananda Muchti Harahap**
 
 2. MHD Hafiz (241401068)
-   Akun = Hafiz237
+   
+   **Akun = Hafiz237**
 
 3. Ahmad Zahran Syauqi (241401092)
-   Akun = ahmadzahnransyauqi
+   
+   **Akun = ahmadzahnransyauqi**
 
 4. Marcello Frans Mardohae Pakpahan (241401104)
-   Akun = Marcello-FM
+   
+   **Akun = Marcello-FM**
 
 ## Catatan: Semua perubahan yang telah diimplementasikan beserta commit akhir project telah di-merge dan dapat dilihat pada branch main.
 
